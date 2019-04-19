@@ -8,7 +8,15 @@
     while ($continue)
     {
         $str = readline("");
-        echo $str."\n";
+        try
+        {
+            $parser->str = $str;
+            $parser->parse();
+        }
+        catch (Exception $e)
+        {
+            echo $e->getMessage() . "\n";
+        }
         if (strcasecmp($str, "exit") === 0)
             $continue = 0;
     }

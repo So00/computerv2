@@ -2,7 +2,7 @@
 
 include_once "SolvePoly.php";
 
-class       ParserPoly extends SolvePoly
+class       ControlerPoly extends SolvePoly
 {
         public $array;
 
@@ -73,6 +73,7 @@ class       ParserPoly extends SolvePoly
         function    validPol($array)
         {
             $x = false;
+            $array = preg_replace("/\s/", "", $array);
             foreach ($array as $actSide)
             {
                 if ($x === false)

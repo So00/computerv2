@@ -16,6 +16,8 @@ class Controler
             $this->poly = new ControlerPoly();
             $this->var = new ControlerVar();
             $this->fun = new ControlerFun();
+            $this->fun->var = $this->var;
+            $this->var->fun = $this->fun;
         }
 
         function parse()
@@ -26,25 +28,32 @@ class Controler
                 ."\n Create a function : funcName(param1, param2) = param1 * param2"
                 ."\n Create a variable : varName = value"
                 ."\n Solve polynom     : x^2 + x + 1 = 2 * x^2 + 0 * x + 0");
+            $this->array[0] = trim($this->array[0]);
+            $this->array[1] = trim($this->array[1]);
             if (strchr($this->array[1], "?") === false)
             {
-                if (OpValidator::validOp($this->array[1], $this->var, $this->fun))
+                if (OpValidator::validOp($this->array, $this->var, $this->fun))
                 {
-                    if ($this->var->validVarName($this->array[0]))
-                        $this->var->trySave($this->array);
-                    else if (($arr = $this->poly->validPol($this->array)))
-                        $this->poly->solve($arr);
+                    if ($this->var->trySave($this->array, $this->var, $this->fun))
+                        echo "Variable saved\n";
                     else if ($this->fun->isValidFun($this->array))
                         $this->fun->save();
+                    else
+                        echo "I didn't understand what you wrote\n";
                 }
                 else
                     throw new Exception("Not a valid right operand");
             }
             else
             {
+                if ($this->array[1][strlen($this->array[1]) - 1] !== "?")
+                    throw new Exception("Please put the \"?\" at the end");
+                $this->array[1] = substr($this->array[1], 0, strlen($this->array[1]) - 1);
                 //variable as param in fun to solve
                 if ($this->fun->validSolveFun($this->array, $this->var))
                     $this->fun->solve();
+                else if (($arr = $this->poly->validPol($this->array)))
+                    $this->poly->solve($arr);
             }
         }
 

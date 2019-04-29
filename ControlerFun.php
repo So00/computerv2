@@ -7,13 +7,15 @@ class ControlerFun
     public  $fun;
     public  $save;
     public  $solve;
+    public  $var;
 
     function __construct()
     {
-        $var = array();
+        $param = array();
     }
 
-    function valid_op($string)
+    /** Can't use the valid op from validator because unknown value like x, y ... are not set in var object */
+    function validOpFun($string)
     {
         $operator = ["+", "-", "%", "/", "*", "^", "(", ")"];
         if (!OpValidator::validBrackets($string))
@@ -34,57 +36,71 @@ class ControlerFun
         return (1);
     }
 
+    /** Is the string a function? */
     function isFun($str)
     {
-        if (preg_match("/^(([a-z]+)(\(([a-z]+)(?:(,[a-z]+)*)\))?)$/im", $str, $ret) && !empty($ret[3]) && !empty($ret[2]))
+        $str = preg_replace("/\s/", "", $str);
+        if (preg_match("/^(([a-z]+)\((([a-z]+)(,?([a-z]+))*)\))?$/im", $str, $ret) && !empty($ret[2]) && !empty($ret[3]))
             return ($ret);
         return (NULL);
     }
 
-    function funExist($str)
+    /** Is the name set? */
+    function issetFunName($name)
     {
-        // if (preg_match("/^(([a-z]+)(\(([a-z]+)(?:(,[a-z]+)*)\))?)$/im", $str, $ret) && !empty($ret[3]) && !empty($ret[2]))
-        //     if ()
+        return (isset($this->fun[trim($name)]));
     }
 
-    function isValidFun($array)
+    /** Does the function exists (name + param) */
+    function funExist($str)
     {
-        $tmp = preg_replace("/\s/", "", $array);
-        if (($ret = $this->isFun($tmp[0])) !== NULL)
+        if (preg_match("/^(([a-z]+)(\([a-z0-9]+((,[a-z0-9]+)*))\))$/im", $str, $ret) && !empty($ret[3]) && !empty($ret[2]))
+            if (isset($this->fun[$ret[2]]) && count($this->fun[$ret[2]]["param"]) === count(explode(",", $ret[3])))
+                return (1);
+        return(0);
+    }
+
+    /** Is the total (left + right) a valid function? */
+    function isValidFun($operand)
+    {
+        if (($ret = $this->isFun($operand[0])) !== NULL)
         {
-            $tmpName=$ret[2];
-            $tmpVarName = explode(",", substr($ret[3], 1, strlen($ret[3]) - 2));
+            $funName = $ret[2];
+            if ($this->var->varExists($funName))
+                throw new Exception("The name is already used in function");
+            $tmpVarName = explode(",", $ret[3]);
             foreach ($tmpVarName as $actVarName)
-                if (strstr($array[1], $actVarName) === false)
+                if (strstr($operand[1], $actVarName) === false)
                     return (0);
-            preg_match_all("/([a-z]+)/i", $array[1], $allWord);
+            preg_match_all("/([a-z]+)/i", $operand[1], $allWord);
             foreach ($allWord[0] as $actWord)
             {
                 if (array_search($actWord, $tmpVarName) === false && $actWord !== "i")
                     return (0);
             }
-            $array[1] = OpValidator::replaceSpace($array[1]);
-            $array[1] = preg_replace("/\s/", "", $array[1]);
-            if ($this->valid_op($array[1]))
+            $operand[1] = OpValidator::replaceSpace($operand[1], $this->var);
+            $operand[1] = preg_replace("/\s/", "", $operand[1]);
+            if ($this->validOpFun($operand[1]))
             {
-                $this->save["name"] = $tmpName;
+                $this->save["name"] = $funName;
                 $this->save["param"] = $tmpVarName;
-                $this->save["op"] = $array[1];
+                $this->save["op"] = $operand[1];
                 return (1);
             }
         }
         return(0);
     }
 
+    /** Saving a function in the array */
     function save()
     {
         $this->fun[$this->save["name"]]["op"] = $this->save["op"];
         $this->fun[$this->save["name"]]["param"] = $this->save["param"];
-        // echo $this->save["name"] . "(" . join(",", $this->save["param"]) . ") = " . $this->save["op"]. "\n";
         echo "Function saved\n";
         unset($this->save);
     }
 
+    /** List all existing function */
     function list()
     {
         if (!empty($this->fun))
@@ -94,31 +110,38 @@ class ControlerFun
             echo "No function saved\n";
     }
 
-    function validParam($name, $var)
+    /** Check if there is the good number of param */
+    function validParam($name, &$param)
     {
-        foreach ($var as $key => $actVar)
+        foreach ($param as $key => $actVar)
         {
-            $actVar = preg_replace("/[0-9]/", "", $actVar);
-            if (!empty($actVar) && isset($varObj->var[$actVar]) === false && $actVar !== "i")
+            $actVar = preg_replace("/[0-9\s]/", "", $actVar);
+            if (!empty($actVar) && $this->var->varExists($actVar) === false && $actVar !== "i")
                 throw new Exception("$actVar is not a valid variable");
             else if (!empty($actVar) && $actVar !== "i")
-                $var[$key] = $varObj->var[$actVar];
+            {
+                $param[$key] = OpValidator::replaceSpace($param[$key], $this->var);
+                $param[$key] = str_replace($actVar ,$this->var->var[$actVar], $param[$key]);
+            }
         }
-        if (count($var) !== count($this->fun[$name]["param"]))
-            throw new Exception((count($this->fun[$name]["param"])) . " parameters excepted, " . (count($var)) . " given");
+        if (count($param) !== count($this->fun[$name]["param"]))
+            throw new Exception((count($this->fun[$name]["param"])) . " parameters excepted, " . (count($param)) . " given");
     }
 
-    function validSolveFun($array, $varObj)
+    /** Does operand are valid for solving that operation? Do it all in opValidator i guess for all operation? */
+    function validSolveFun($operand, $paramObj)
     {
-        $array[0] = preg_replace("/\s/", "", $array[0]);
-        if (preg_match("/^(([a-z]+)(\(([0-9a-z]+(\.[0-9]+)?)(?:(,[0-9a-z]+(\.[0-9]+)?)*)\))?)$/im", $array[0], $ret) && !empty($ret[3]) && !empty($ret[2]))
+        $operand[0] = preg_replace("/\s/", "", $operand[0]);
+        if (preg_match("/^(([a-z]+)(\(([0-9a-z]+(\.[0-9]+)?)(?:(,[0-9a-z]+(\.[0-9]+)?)*)\))?)$/im", $operand[0], $ret) && !empty($ret[3]) && !empty($ret[2]))
         {
             $name = $ret[2];
-            $var = explode(",", substr($ret[3], 1, strlen($ret[3]) - 2));
+            if ($this->var->varExists($name))
+                return (0);
             if (isset($this->fun[$name]) === false)
                 throw new Exception("Not a valid function name");
-            $this->validParam($name, $var);
-            return (str_replace($this->fun[$name]["param"], $var, $this->fun[$name]["op"]));
+            $param = explode(",", substr($ret[3], 1, strlen($ret[3]) - 2));
+            $this->validParam($name, $param);
+            return (str_replace($this->fun[$name]["param"], $param, $this->fun[$name]["op"]));
         }
         return (NULL);
     }

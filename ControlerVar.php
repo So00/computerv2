@@ -5,6 +5,7 @@ include_once "OpValidator.php";
 class ControlerVar
 {
     public  $var;
+    public  $fun;
 
     function __construct()
     {
@@ -13,34 +14,29 @@ class ControlerVar
 
     function varExists($str)
     {
-        if (isset($this->var[$str]))
-            return (1);
-        return (0);
+        return (isset($this->var[$str]));
     }
 
     function validVarName($str)
     {
-        if (preg_match("/[^a-z\s]/i", $str) === 0 && preg_replace("\s", "", $str) !== "i")
+        $str = trim($str);
+        if (preg_match("/[^a-z]/i", $str) === 0 && $str !== "i")
             return (1);
         return (0);
     }
 
-    function trySave($array)
+    function trySave($array, $var, $fun)
     {
-        // $array = preg_replace("/\s/", "", $array);
-        // if ( && (preg_match("/^(i?[+-]?([0-9]*)(\.([0-9]+))?i?)$/", $array[1]) || !empty($this->var[$array[1]])))
-        //     return (1);
-        // return(0);
-    }
-
-    function save($array)
-    {
-        $array = preg_replace("/\s/", "", $array);
+        if (!$this->validVarName($array[0]))
+            return (0);
+        if ($fun->issetFunName($array[0]))
+            throw new Exception("The name is already used in function, be more specific");
+        if (OpValidator::checkRightOperand($array[1],$this->var, $this->fun) === false)
+            return (0);
         if (!empty($this->var[$array[1]]))
             $this->var[$array[0]] = $this->var[$array[1]];
         else
-            $this->var[$array[0]] = OpValidator::replaceSpace($array[1]);
-        // echo $this->var[$array[0]] . "\n";
+            $this->var[$array[0]] = OpValidator::replaceSpace($array[1], $this);
         echo "Variable saved\n";
     }
 

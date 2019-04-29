@@ -2,7 +2,8 @@
     include_once "./controler.php";
 
     $continue = 1;
-    $controler = new Controler();
+    $data = new Data();
+    $controler = new Controler($data);
 
     while ($continue)
     {
@@ -13,9 +14,9 @@
             try
             {
                 if (strcasecmp($str, "listvar") === 0)
-                    $controler->var->list();
+                    $data->listVar();
                 else if (strcasecmp($str, "listfun") === 0)
-                    $controler->fun->list();
+                    $data->listFun();
                 else
                 {
                     $controler->str = strtolower($str);

@@ -24,17 +24,17 @@ class OpValidator
 
     static function validBrackets($string)
     {
-        while (($opBracket = strpos($string, "(", 0)) !== false && ($clBrackets = strpos($string, ")", 0)) !== false)
+        for (; $j < strlen($op); $j++)
         {
-            if ($clBrackets < $opBracket)
-                return (0);
-            $string[$opBracket] = " ";
-            $string[$clBrackets] = " ";
+            if ($op[$j] === ")")
+                $brackets--;
+            if ($op[$j] === "(")
+                $brackets++;
+            if ($brackets < 0)
+                throw new Exception("Brackets are close before being open");
         }
-        $opBracket = strpos($string, "(", 0);
-        $clBrackets = strpos($string, ")", 0);
-        if (($opBracket && $clBrackets === false) || ($opBracket === false && $clBrackets))
-            return (0);
+        if ($brackets)
+            throw new Exception("Some backets are never closed");
         return (1);
     }
 
@@ -82,6 +82,8 @@ class OpValidator
                 $brackets--;
             if ($op[$j] === "(")
                 $brackets++;
+            if ($brackets < 0)
+                throw new Exception("Brackets are close before being open");
         }
         $end = $j;
         if ($brackets)

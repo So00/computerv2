@@ -6,6 +6,7 @@ include_once "Data.php";
 class OpSolve{
 
     static public $operator = ["+", "-", "%", "/", "*", "(", ")"];
+    static public $operation = ["+" => "add", "%" => "modulo", "-" => "minus", "/" => "div", "*" => "mult"];
 
     static function getBrackets($op)
     {
@@ -59,7 +60,11 @@ class OpSolve{
         return ($i);
     }
 
-    static function replaceSimpleOp(&$op, $pos, &$lastPos)
+    /**
+     * Do the operation
+     * $op[$pos] is the operator
+     */
+    static function replaceSimpleOp(&$op, $pos, $lastPos)
     {
         $ret = array();
         $left = substr($op, $lastPos, $pos - $lastPos);
@@ -67,44 +72,27 @@ class OpSolve{
         if ($nextOp <= strlen($op))
             $right = substr($op, $pos + 1, $nextOp - ($pos + 1));
         else
-            return (0);
-        switch ($op[$pos])
-        {
-            case "+" :
-                $replacement = OpSolve::add($left, $right);
-            break;
-            case "/" :
-                $replacement = OpSolve::add($left, $right);
-            break;
-            case "%" :
-                $replacement = OpSolve::add($left, $right);
-            break;
-            case "*" :
-                $replacement = OpSolve::add($left, $right);
-            break;
-            case "-" :
-                $replacement = OpSolve::add($left, $right);
-            break;
-        }
-        echo str_replace(substr($op, $lastPos, $nextOp - $lastPos - 1), $replacement, $op) . " << result \n";
-        $op = str_replace(substr($op, $lastPos, $nextOp - $lastPos - 1), $replacement, $op);
-        $lastPos += strlen($replacement);
+            return (strlen($op));
+        $replacement = OpSolve::{OpSolve::$operation[$op[$pos]]}($left, $right);
+        $to_search = substr($op, $lastPos, $nextOp - $lastPos);
+        $op = str_replace($to_search, $replacement, $op);
+        return ($lastPos);
     }
-    
+
     static function solve ($op, $data)
     {
         if (!OpValidator::checkRightOperand($op, $data))
             throw new Exception("$op is not a valid operation");
         $i = 0;
         $nextOp = OpSolve::getFirstOperandPos($op, $i);
-        while(OpSolve::replaceSimpleOp($op, $nextOp, $i))
+        while($i < strlen($op))
         {
-            echo $op."\n\n";
             if ($op[$i] === "(")
                 $i++;
+            $i = OpSolve::replaceSimpleOp($op, $nextOp, $i);
             $nextOp = OpSolve::getFirstOperandPos($op, $i);
-            $value = OpSolve::replaceSimpleOp($op, $nextOp, $i);
         }
+        echo "$op\n";
     }
 
 }

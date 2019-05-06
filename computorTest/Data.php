@@ -52,11 +52,28 @@ class Data
         return (1);
     }
 
+    function showMatrice($matrice, $name)
+    {
+        echo "Matrice $name : \n";
+        foreach ($matrice as $line)
+        {
+            echo "  [";
+            foreach ($line as $keyValue => $actValue)
+            {
+                echo "$actValue". ( isset($line[$keyValue + 1]) ? "," : "");
+            }
+            echo "]\n";
+        }
+    }
+
     function listVar()
     {
         if (!empty($this->var))
             foreach ($this->var as $key => $value)
-                echo "$key = $value\n";
+                if (is_array($value))
+                    $this->showMatrice($value, $key);
+                else
+                    echo "$key = $value\n";
         else
             echo "No variable saved\n";
     }
@@ -106,7 +123,9 @@ class Data
     {
         if (OpValidator::checkRightOperand($rightOp, $this))
         {
-            $this->var[$leftOp] = OpValidator::replaceSpace($rightOp, $this);
+            $rightOp = OpValidator::replaceSpace($rightOp, $this);
+            $rightOp = OpValidator::replaceAllFun($rightOp, $this);
+            $this->var[$leftOp] = OpSolve::solve($rightOp, $this);
             echo "Value $leftOp is saved\n";
         }
     }

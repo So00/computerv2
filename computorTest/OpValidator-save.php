@@ -70,7 +70,7 @@ class OpValidator
         return ($op);
     }
 
-    static function isMatrice($str, $data)
+    static function isMatrice($str,$data)
     {
         if (preg_match("/^\[(\[([^,\]]+(,[^,\]]+)*)\](;\[([^,\]]+(,[^,\]]+)*)\])*)\]$/i", $str, $test))
         {
@@ -154,7 +154,7 @@ class OpValidator
 
     static function strgetpos($op, $position)
     {
-        $operator = ["+", "-", "%", "/", "*", "(", ")", "^"];
+        $operator = ["+", "-", "%", "/", "*", "(", ")"];
         for ($i = $position; $i < strlen($op); $i++)
         {
             if (array_search($op[$i], $operator) !== false && $i !== 0)

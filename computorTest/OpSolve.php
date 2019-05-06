@@ -6,7 +6,7 @@ include_once "Data.php";
 class OpSolve{
 
     static public $operator = ["+", "-", "%", "/", "*", "(", ")"];
-    static public $operation = ["+" => "add", "%" => "modulo", "-" => "minus", "/" => "div", "*" => "mult"];
+    static public $operation = ["+" => "add", "%" => "modulo", "-" => "minus", "/" => "div", "*" => "mult", "^" => "power"];
 
     static function add($left, $right)
     {
@@ -15,6 +15,11 @@ class OpSolve{
         return (floatval($left));
     }
     
+    static function power($left, $right)
+    {
+        return (floatval($left) ** floatval($right));
+    }
+
     static function minus($left, $right)
     {
         if (isset($right))
@@ -47,12 +52,14 @@ class OpSolve{
     {
         $firstOp = 0;
         $firstOp = strpos($op, "(");
-        if ($firstOp === false && preg_match("/[\*\/\%]/i", $op) !== 0)
+        if ($firstOp === false && preg_match("/[\*\/\%\^]/i", $op) !== 0)
         {
             $firstOp = strpos($op, "/");
             if ((($tmp = strpos($op, "%")) && $tmp < $firstOp) || $firstOp === false)
                 $firstOp = $tmp;
             if ((($tmp = strpos($op, "*")) && $tmp < $firstOp) || $firstOp === false)
+                $firstOp = $tmp;
+            if ((($tmp = strpos($op, "^"))) || $firstOp === false)
                 $firstOp = $tmp;
         }
         if ($firstOp === false)
@@ -125,8 +132,12 @@ class OpSolve{
         $op = str_replace(substr($op, $pos, $end - $pos), $solve, $op);
     }
 
+    static function matriceSolve($op, $data)
+    {
+        $matrice = OpValidator::isMatrice($op, $data);
+        return ($matrice);
+    }
 
-    /** Need To Do Fun And More Test */
     static function solve ($op, $data)
     {
         $op = OpValidator::replaceSpace($op, $data);
@@ -134,6 +145,8 @@ class OpSolve{
         $op = preg_replace("/\s/", "", $op);
         if (!OpValidator::checkRightOperand($op, $data))
             throw new Exception("$op is not a valid operation");
+        if (strpos($op, "[") !== false)
+            return (OpSolve::matriceSolve($op, $data));
         while (($prior = OpSolve::priorOp($op)) !== false)
         {
             if ($op[$prior] === "(")

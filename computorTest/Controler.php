@@ -39,8 +39,7 @@ class Controler
             {
                 if ($this->array[1][strlen($this->array[1]) - 1] !== "?")
                     throw new Exception("Please put the \"?\" at the end");
-                echo "solving\n";
-                OpSolve::solve($this->array[0], $this->data);
+                echo OpSolve::solve($this->array[0], $this->data) . "\n";
                 // $this->array[1] = substr($this->array[1], 0, strlen($this->array[1]) - 1);
                 // //variable as param in fun to solve
                 // if ($this->fun->validSolveFun($this->array, $this->var))

@@ -3,6 +3,13 @@
 class OpValidator
 {
 
+    static function isalpha($c)
+    {
+        if (($c >= 'a' && $c <= 'z') || ($c >= 'A' && $c <= 'Z'))
+            return (1);
+        return (0);
+    }
+
     static function replaceSpace($str, $data)
     {
         $str = preg_replace("/([a-z]+)\s([a-z]+)/", "$1*$2", $str);
@@ -22,9 +29,10 @@ class OpValidator
         return ($str);
     }
 
-    static function validBrackets($string)
+    static function validBrackets($op)
     {
-        for (; $j < strlen($op); $j++)
+        $brackets = 0;
+        for ($j = 0; $j < strlen($op); $j++)
         {
             if ($op[$j] === ")")
                 $brackets--;
@@ -35,12 +43,35 @@ class OpValidator
         }
         if ($brackets)
             throw new Exception("Some backets are never closed");
-        return (1);
+    }
+
+    static function replaceAllFun($op, $data)
+    {
+        for ($i = 0; $i < strlen($op); $i++)
+        {
+            if (OpValidator::isalpha($op[$i]))
+            {
+                for ($j = $i; $j < strlen($op) && OpValidator::isalpha($op[$j]); $j++);
+                $name = substr($op, $i, $j - $i);
+                if ($name !== "i")
+                {
+                    $bracketsBegin = OpValidator::strgetpos($op, $j);
+                    $bracketsEnd = OpSolve::getBracketsEnd($op, $j);
+                    $function = substr($op, $i, $bracketsEnd - $i);
+                    if ($data->isFunValid($function))
+                    {
+                        $replacement = $data->replaceFun($function);
+                        $op = str_replace($function, $replacement, $op);
+                        $i = -1;
+                    }
+                }
+            }
+        }
+        return ($op);
     }
 
     static function isMatrice($str,$data)
     {
-        // if (preg_match("/^\[(\[(.*(,.*)*)\](;\[(.*(,.*)*)\]))\]$/i", $str, $test))
         if (preg_match("/^\[(\[([^,\]]+(,[^,\]]+)*)\](;\[([^,\]]+(,[^,\]]+)*)\])*)\]$/i", $str, $test))
         {
             $allLign = $test[1];
@@ -72,8 +103,8 @@ class OpValidator
         if (!$data->isFunNameSet($name))
             return (0);
         $brackets = 1;
-        $j = strpos($op, "(", $i);
-        if ($j === false)
+        $j = OpValidator::strgetpos($op, $i);
+        if ($j === false || $op[$j] !== "(")
             return (0);
         $j++;
         for (; $j < strlen($op) && $brackets; $j++)
@@ -91,7 +122,6 @@ class OpValidator
         if ($data->isFunValid(substr($op, $i, $end-$i + 1)))
         {
             $nextOp = $end;
-            $data->replaceFun(substr($op, $i, $end-$i + 1));
             return (1);
         }
         return (0);
@@ -122,8 +152,9 @@ class OpValidator
         throw new Exception("Not a valid matrice");
     }
 
-    static function strgetpos($op, $operator, $position)
+    static function strgetpos($op, $position)
     {
+        $operator = ["+", "-", "%", "/", "*", "(", ")"];
         for ($i = $position; $i < strlen($op); $i++)
         {
             if (array_search($op[$i], $operator) !== false && $i !== 0)
@@ -136,15 +167,15 @@ class OpValidator
 
     static function checkSemanticOp($op, $data)
     {
-        $operator = ["+", "-", "%", "/", "*", "(", ")"];
+        OpValidator::validBrackets($op);
+        $save = $op;
+        $op = str_replace(["(", ")"], "", $op);
         for ($i = 0; $i < strlen($op); $i++)
         {
-            if ($op[$i] === "(")
-                $i++;
-            $nextOp = OpValidator::strgetpos($op, $operator, $i);
+            $nextOp = OpValidator::strgetpos($op, $i);
             $search = substr($op, $i, $nextOp - $i);
             if (!OpValidator::isValidNumber($search) && !OpValidator::isMatrice($search, $data) && !OpValidator::isFun($search, $op, $i, $nextOp, $data))
-                throw new Exception("$search is not valid");
+                throw new Exception("$save is not valid");
             $i = $nextOp;
         }
         return (1);

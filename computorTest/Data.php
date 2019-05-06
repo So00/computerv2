@@ -23,27 +23,11 @@ class Data
         return (isset($this->fun[$name]));
     }
 
-    function splitFun($param)
-    {
-        $brackets = 1;
-        for ($i = 0; $i < strlen($param); $i++)
-        {
-            if ($brackets === 1 && $param[$i] === ",")
-                $param[$i] = "!";
-            if ($param[$i] === "(")
-                $brackets++;
-            if ($param[$i] === ")")
-                $brackets--;
-        }
-        return ($param);
-    }
-
     function replaceFun($function)
     {
         preg_match("/(([a-z]+)\((([^,]*)(,.*[^,])*))\)$/i", $function, $expData);
         $name = $expData[2];
-        $expData[3] = $this->splitFun($expData[3]);
-        $funParam = explode("!", $expData[3]);
+        $funParam = explode(",", $expData[3]);
         $str = $this->fun[$name]["op"];
         foreach($funParam as $key => $actParam)
             $str = str_replace($this->fun[$name]["param"][$key], "($actParam)", $str);
@@ -57,8 +41,7 @@ class Data
         $name = $expData[2];
         if (!$this->isFunNameSet($name))
             throw new Exception("$name is not a valid function name");
-        $expData[3] = $this->splitFun($expData[3]);
-        $funParam = explode("!", $expData[3]);
+        $funParam = explode(",", $expData[3]);
         if (count($funParam) !== count($this->fun[$name]["param"]))
             throw new Exception("You gave " . count($funParam) . " for the function $name, it has " . count($this->fun[$name]["param"]));
         foreach($funParam as $key => $actParam)
@@ -69,9 +52,6 @@ class Data
         return (1);
     }
 
-    // x(x)=x
-    // y(y)=y
-    // lol=x(y(1))
     function listVar()
     {
         if (!empty($this->var))
@@ -93,12 +73,18 @@ class Data
     function checkFunRightOperand(&$rightOp, $funParam)
     {
         preg_match_all("/([a-z]+)/i", $rightOp, $allWord);
+        $tmp = $rightOp;
         foreach ($funParam as $actParam)
             if (array_search($actParam, $allWord[0]) === false)
                 throw new Exception("$actParam is not used in the function");
             else if ($this->isVarNameSet($actParam))
                 throw new Exception("$actParam already exists as var");
+            else if ($actParam === "i")
+                throw new Exception("$actParam is already used for imaginary number");
+            else
+                $tmp = str_replace($actParam , "1", $tmp);
         $rightOp = OpValidator::replaceSpace($rightOp, $this);
+        OpValidator::checkRightOperand($tmp, $this);
         return (1);
     }
 

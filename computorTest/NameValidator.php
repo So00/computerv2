@@ -5,7 +5,7 @@ class NameValidator
     static function validFunName($fun, $data)
     {
         $fun = preg_replace("/\s/", "", $fun);
-        if (preg_match("/^(([a-z]+)\((([a-z]+)(,?([a-z]+))*)\))?$/im", $fun, $ret) && !empty($ret[2]) && !empty($ret[3]))
+        if (preg_match("/^(([a-z]+)\((([a-z]+)(,?([a-z]+))*)\))?$/im", $fun, $ret) && !empty($ret[2]) && !empty($ret[3]) && $ret[2] !== "i")
         {
             if ($data->isVarNameSet($ret[2]))
                 throw new Exception("The name {$ret[2]} is already a value name");

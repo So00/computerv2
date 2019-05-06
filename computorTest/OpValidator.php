@@ -184,6 +184,7 @@ class OpValidator
     static function checkRightOperand($right, $data)
     {
         $right = OpValidator::replaceSpace($right, $data);
+        $right = OpValidator::replaceAllFun($right, $data);
         $right = preg_replace("/\s/", "", $right);
         return (OpValidator::checkSemanticOp($right, $data));
     }

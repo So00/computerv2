@@ -10,6 +10,25 @@ class OpValidator
         return (0);
     }
 
+    static function replaceVar($str, $name, $value)
+    {
+        $nameLen = strlen($name);
+        $valueLen = strlen($value);
+        for ($i = 0; $i < strlen($str); $i++)
+        {
+            if ($str[$i] === $name[0] && ($i === 0 || !OpValidator::isalpha($str[$i - 1])))
+            {
+                for ($j = 0; $j < $nameLen && $str[$i + $j] === $name[$j]; $j++);
+                if ($j === $nameLen && ($i + $j === strlen($str) || !OpValidator::isalpha($str[$i + $j + 1])))
+                {
+                    $str = substr_replace($str, $value, $i, $j);
+                    $i += $valueLen;
+                }
+            }
+        }
+        return ($str);
+    }
+
     static function replaceSpace($str, $data)
     {
         $str = preg_replace("/([a-z]+)\s([a-z]+)/", "$1*$2", $str);
@@ -21,11 +40,11 @@ class OpValidator
         $str = preg_replace("/([a-z]+)\s?([0-9]+\.?[0-9]*)/", "$1*$2", $str);
         $str = preg_replace("/\s/", "", $str);
         if (count($data->var))
-            foreach ($data->var as $key => $actVar)
+            foreach ($data->var as $name => $value)
             {
-                $str = preg_replace("/($key)\s?(\(.*\))/", "$1*$2", $str);
-                $str = str_replace($key, "($actVar)", $str);
+                $str = OpValidator::replaceVar($str, $name, $value);
             }
+        $str = preg_replace("/(-)\s?(\(.*\))/", "-1*$2", $str);
         return ($str);
     }
 
@@ -57,6 +76,8 @@ class OpValidator
                 {
                     $bracketsBegin = OpValidator::strgetpos($op, $j);
                     $bracketsEnd = OpSolve::getBracketsEnd($op, $j);
+                    if ($bracketsBegin === false || $bracketsEnd === false)
+                        throw new Exception("Error on $name");
                     $function = substr($op, $i, $bracketsEnd - $i);
                     if ($data->isFunValid($function))
                     {
@@ -170,6 +191,7 @@ class OpValidator
         OpValidator::validBrackets($op);
         $save = $op;
         $op = str_replace(["(", ")"], "", $op);
+        $op = str_replace("*-", "*", $op);
         for ($i = 0; $i < strlen($op); $i++)
         {
             $nextOp = OpValidator::strgetpos($op, $i);

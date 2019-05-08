@@ -107,6 +107,8 @@ class OpSolve{
     {
         $pos++;
         $len = strlen($op);
+        if ($op[$pos] === "-")
+            $pos++;
         for (; $pos < $len && (is_numeric($op[$pos]) || $op[$pos] === "."); $pos++);
         return ($pos ? $pos - 1 : 0);
     }
@@ -117,11 +119,13 @@ class OpSolve{
         $len = strlen($op);
         if ($op[$begin] === "(")
             $begin++;
-        for ($end = $begin; $brackets; $end++)
+        for ($end = $begin; $brackets && $end < $len; $end++)
             if ($op[$end] === "(")
                 $brackets++;
             else if ($op[$end] === ")")
                 $brackets--;
+        if ($brackets)
+            return (false);
         return ($end);
     }
 

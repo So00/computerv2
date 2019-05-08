@@ -27,11 +27,26 @@ class Data
     {
         preg_match("/(([a-z]+)\((([^,]*)(,.*[^,])*))\)$/i", $function, $expData);
         $name = $expData[2];
-        $funParam = explode(",", $expData[3]);
+        $funParam = $this->splitFunArg($expData[3]);
         $str = $this->fun[$name]["op"];
         foreach($funParam as $key => $actParam)
             $str = str_replace($this->fun[$name]["param"][$key], "($actParam)", $str);
         return ($str);
+    }
+
+    function splitFunArg($args)
+    {
+        $depth = 0;
+        for ($i = 0; $i < strlen($args); $i++)
+        {
+            if ($args[$i] === "(")
+                $depth++;
+            if ($args[$i] === ")")
+                $depth--;
+            if ($args[$i] === "," && !$depth)
+                $args[$i] = "!";
+        }
+        return (explode("!", $args));
     }
 
     function isFunValid($function)
@@ -41,9 +56,9 @@ class Data
         $name = $expData[2];
         if (!$this->isFunNameSet($name))
             throw new Exception("$name is not a valid function name");
-        $funParam = explode(",", $expData[3]);
+        $funParam = $this->splitFunArg($expData[3]);
         if (count($funParam) !== count($this->fun[$name]["param"]))
-            throw new Exception("You gave " . count($funParam) . " for the function $name, it has " . count($this->fun[$name]["param"]));
+            throw new Exception("You gave " . count($funParam) . " parameters for the function $name, it has " . count($this->fun[$name]["param"]). " parameters");
         foreach($funParam as $key => $actParam)
         {
             if (!OpValidator::checkRightOperand($actParam, $this))
@@ -87,7 +102,7 @@ class Data
             echo "No function saved\n";
     }
 
-    function checkFunRightOperand(&$rightOp, $funParam)
+    function checkFunRightOperand(&$rightOp, $funParam, $name)
     {
         preg_match_all("/([a-z]+)/i", $rightOp, $allWord);
         $tmp = $rightOp;
@@ -98,6 +113,8 @@ class Data
                 throw new Exception("$actParam already exists as var");
             else if ($actParam === "i")
                 throw new Exception("$actParam is already used for imaginary number");
+            else if ($actParam === $name)
+                throw new Exception("$name is already used for the function name, you can't use it as param");
             else
                 $tmp = str_replace($actParam , "1", $tmp);
         $rightOp = OpValidator::replaceSpace($rightOp, $this);
@@ -111,11 +128,11 @@ class Data
             throw new Exception("Error in the left operand of your function");
         $name = $expData[2];
         $funParam = explode(",", $expData[3]);
-        if ($this->checkFunRightOperand($rightOp, $funParam))
+        if ($this->checkFunRightOperand($rightOp, $funParam, $name))
         {
             $this->fun[$name]["op"] = $rightOp;
             $this->fun[$name]["param"] = $funParam;
-            echo "Function $name is saved\n";
+            echo "Function $name is saved (".  join(",", $this->fun[$name]["param"]) . ") = {$this->fun[$name]["op"]}\n";
         }
     }
 
@@ -126,7 +143,7 @@ class Data
             $rightOp = OpValidator::replaceSpace($rightOp, $this);
             $rightOp = OpValidator::replaceAllFun($rightOp, $this);
             $this->var[$leftOp] = OpSolve::solve($rightOp, $this);
-            echo "Value $leftOp is saved\n";
+            echo "Value $leftOp is saved : $rightOp\n";
         }
     }
 }

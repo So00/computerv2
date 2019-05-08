@@ -152,7 +152,7 @@ class OpSolve{
         $replacement = OpSolve::{OpSolve::$operation[$op[$pos]]}($left, $right);
         $to_search = substr($op, $lastPos, $nextPos + 1 - $lastPos);
         $op = str_replace($to_search, $replacement, $op);
-        if ($op[$pos] === "/" && OpSolve::getImaginaryPower($left, $right, "div") === -1)
+        if ($op[$pos] === "/" && $right === "i")
             $lastPossible = $lastPos + strlen($replacement);
     }
 
@@ -202,6 +202,17 @@ class OpSolve{
         return ($matrice);
     }
 
+    static function splitBasic($op)
+    {
+        // echo $op."\n";
+        $basicOp = ["+", "-"];
+        $op = preg_replace("/(\+-)/", "-", $op);
+        for ($i = 0; $i < strlen($op); $i++)
+        {
+
+        }
+    }
+
     static function solve ($op, $data)
     {
         $op = OpValidator::replaceSpace($op, $data);
@@ -224,6 +235,7 @@ class OpSolve{
             }
         }
         $lastPossible = NULL;
+        $splitBasicOp = OpSolve::splitBasic($op);
         // while (($nextOp = OpSolve::getFirstOperandPos($op, $lastPossible)) !== false)
         // {
         //     $lastNum = OpSolve::getLastNb($op, $nextOp);

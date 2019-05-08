@@ -13,16 +13,15 @@ class OpValidator
     static function replaceVar($str, $name, $value)
     {
         $nameLen = strlen($name);
-        $valueLen = strlen($value);
         for ($i = 0; $i < strlen($str); $i++)
         {
             if ($str[$i] === $name[0] && ($i === 0 || !OpValidator::isalpha($str[$i - 1])))
             {
                 for ($j = 0; $j < $nameLen && $str[$i + $j] === $name[$j]; $j++);
-                if ($j === $nameLen && ($i + $j === strlen($str) || !OpValidator::isalpha($str[$i + $j + 1])))
+                if ($j === $nameLen && (!isset($str[$i + $j]) || !OpValidator::isalpha($str[$i + $j])))
                 {
                     $str = substr_replace($str, $value, $i, $j);
-                    $i += $valueLen;
+                    $i = -1;
                 }
             }
         }
@@ -31,12 +30,11 @@ class OpValidator
 
     static function replaceSpace($str, $data)
     {
-        $str = preg_replace("/([a-z]+)\s*([a-z]+)/", "$1*$2", $str);
+        $str = preg_replace("/([a-z]+)\s+([a-z]+)/", "$1*$2", $str);
         $str = preg_replace("/([0-9]+\.?[0-9]*)\s*([a-z]+)/", "$1*$2", $str);
         $str = preg_replace("/(\(.*\))\s*(\(.*\))/", "$1*$2", $str);
         $str = preg_replace("/(\(.*\))\s*([a-z]+)/", "$1*$2", $str);
         $str = preg_replace("/([0-9]+)\s*(\(.*\))/", "$1*$2", $str);
-        $str = preg_replace("/(\(.*\))\s*([0-9]+)/", "$1*$2", $str);
         $str = preg_replace("/([a-z]+)\s*([0-9]+\.?[0-9]*)/", "$1*$2", $str);
         $str = preg_replace("/\s/", "", $str);
         if (count($data->var))
@@ -44,6 +42,8 @@ class OpValidator
             {
                 $str = OpValidator::replaceVar($str, $name, $value);
             }
+        while (preg_match("/(\(.*\))\s*\*?([0-9]+)/", $str))
+            $str = preg_replace("/(\(.*\))\s*\*?([0-9]+)/", "$2*$1", $str);
         $str = preg_replace("/(-)\s?(\(.*\))/", "-1*$2", $str);
         return ($str);
     }

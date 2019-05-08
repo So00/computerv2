@@ -81,14 +81,19 @@ class Data
         }
     }
 
+    function showVar($key, $value)
+    {
+        if (is_array($value))
+            $this->showMatrice($value, $key);
+        else
+            echo "$key = $value\n";
+    }
+
     function listVar()
     {
         if (!empty($this->var))
             foreach ($this->var as $key => $value)
-                if (is_array($value))
-                    $this->showMatrice($value, $key);
-                else
-                    echo "$key = $value\n";
+                $this->showVar($key, $value);
         else
             echo "No variable saved\n";
     }
@@ -143,7 +148,7 @@ class Data
             $rightOp = OpValidator::replaceSpace($rightOp, $this);
             $rightOp = OpValidator::replaceAllFun($rightOp, $this);
             $this->var[$leftOp] = OpSolve::solve($rightOp, $this);
-            echo "Value $leftOp is saved : $rightOp\n";
+            $this->showVar($leftOp, $this->var[$leftOp]);
         }
     }
 }

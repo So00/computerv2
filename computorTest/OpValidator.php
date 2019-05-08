@@ -42,8 +42,8 @@ class OpValidator
             {
                 $str = OpValidator::replaceVar($str, $name, $value);
             }
-        while (preg_match("/(\(.*\))\s*\*?([0-9]+)/", $str))
-            $str = preg_replace("/(\(.*\))\s*\*?([0-9]+)/", "$2*$1", $str);
+        while (preg_match("/(\(.*\))\s*\*?(-?[0-9]+)/", $str))
+            $str = preg_replace("/(\(.*\))\s*\*?(-?[0-9]+)/", "$2*$1", $str);
         $str = preg_replace("/(-)\s?(\(.*\))/", "-1*$2", $str);
         return ($str);
     }
@@ -77,7 +77,7 @@ class OpValidator
                     $bracketsBegin = OpValidator::strgetpos($op, $j);
                     $bracketsEnd = OpSolve::getBracketsEnd($op, $j);
                     if ($bracketsBegin === false || $bracketsEnd === false)
-                        throw new Exception("Error on $name");
+                        throw new Exception("Error on $name : Not a valid function");
                     $function = substr($op, $i, $bracketsEnd - $i);
                     if ($data->isFunValid($function))
                     {

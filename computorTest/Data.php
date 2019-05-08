@@ -143,12 +143,7 @@ class Data
 
     function varSave($leftOp, $rightOp)
     {
-        if (OpValidator::checkRightOperand($rightOp, $this))
-        {
-            $rightOp = OpValidator::replaceSpace($rightOp, $this);
-            $rightOp = OpValidator::replaceAllFun($rightOp, $this);
-            $this->var[$leftOp] = OpSolve::solve($rightOp, $this);
-            $this->showVar($leftOp, $this->var[$leftOp]);
-        }
+        $this->var[$leftOp] = OpSolve::solve($rightOp, $this);
+        $this->showVar($leftOp, $this->var[$leftOp]);
     }
 }

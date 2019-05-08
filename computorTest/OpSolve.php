@@ -103,7 +103,16 @@ class OpSolve{
     {
         if ($right == false)
             throw new Exception("Nothing after your modulo for $left");
-        return (floatval($left) % floatval($right));
+        $iPow = OpSolve::getImaginaryPower($left, $right, "div");
+        OpSolve::replaceSimpleI($left, $right);
+        if (floatval($right) === 0.0)
+            throw new Exception("Can't divise by 0");
+        $result = floatval($left) / floatval($right);
+        if ($iPow === 1)
+            return ($result."i");
+        else if ($iPow === -1)
+            throw new Exception("Really? %i ?");
+        return ($result);
     }
 
     static function priorOp($op, $lastPossible)
@@ -191,6 +200,12 @@ class OpSolve{
 
     static function replaceBrackets(&$op, $pos, $data)
     {
+        if ($op[$pos - 1] === "*")
+        {
+            $lastNum = OpSolve::getLastNb($op, $pos - 1);
+            $num = substr($op, $lastNum, $pos - 1 - $lastNum);
+            die();
+        }
         $end = OpSolve::getBracketsEnd($op, $pos);
         $solve = OpSolve::solve(substr($op, $pos + 1, ($end - 1) - ($pos + 1)), $data);
         $op = str_replace(substr($op, $pos, $end - $pos), $solve, $op);
@@ -213,6 +228,21 @@ class OpSolve{
         }
     }
 
+    static function expandBracketsPow($op)
+    {
+        if (preg_match_all("/(\(.*\))\^([0-9]+)/U", $op, $allPow))
+        {
+            foreach ($allPow[1] as $key => $actOp)
+            {
+                $replacement = "";
+                for ($i = intval($allPow[2][$key]); $i; $i--)
+                    $replacement .= $actOp . ($i !== 1 ? "*" : "");
+                $op = str_replace($allPow[0][$key], $replacement, $op);
+            }
+        }
+        return ($op);
+    }
+
     static function solve ($op, $data)
     {
         $op = OpValidator::replaceSpace($op, $data);
@@ -223,6 +253,7 @@ class OpSolve{
         if (strpos($op, "[") !== false)
             return (OpSolve::matriceSolve($op, $data));
         $lastPossible = NULL;
+        $op = OpSolve::expandBracketsPow($op);
         while (($prior = OpSolve::priorOp($op, $lastPossible)) !== false)
         {
             if ($op[$prior] === "(")

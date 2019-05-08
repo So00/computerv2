@@ -200,13 +200,26 @@ class OpSolve{
 
     static function replaceBrackets(&$op, $pos, $data)
     {
-        if ($op[$pos - 1] === "*")
+        $end = OpSolve::getBracketsEnd($op, $pos);
+        while ($op[$pos - 1] === "*")
         {
             $lastNum = OpSolve::getLastNb($op, $pos - 1);
             $num = substr($op, $lastNum, $pos - 1 - $lastNum);
-            die();
+            for ($i = $pos + 1; $i < $end; $i++)
+            {
+                if ($i === $pos + 1)
+                {
+                    $op = substr_replace($op, "$num*", $i, 0);
+                    $end = OpSolve::getBracketsEnd($op, $pos);
+                }
+                if (($op[$i] === "+" || $op[$i] === "-")
+                && (is_numeric($op[$i - 1]) || $op[$i - 1] === "i"))
+                    $op = substr_replace($op, "$num*", $i + 1, 0);
+            }
+            $op = substr_replace($op, "", $pos - strlen($num) - 1, strlen($num) + 1);
+            $pos -= strlen($num) + 1;
+            $end = OpSolve::getBracketsEnd($op, $pos);
         }
-        $end = OpSolve::getBracketsEnd($op, $pos);
         $solve = OpSolve::solve(substr($op, $pos + 1, ($end - 1) - ($pos + 1)), $data);
         $op = str_replace(substr($op, $pos, $end - $pos), $solve, $op);
     }

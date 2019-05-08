@@ -10,42 +10,82 @@ class OpSolve{
 
     static function add($left, $right)
     {
-        if (isset($right))
-            return (floatval($left) + floatval($right));
-        return (floatval($left));
+        if (empty($right))
+            throw new Exception("Nothing after your minus for $left");
+        return (floatval($left) + floatval($right));
     }
     
     static function power($left, $right)
     {
-        return (floatval($left) ** floatval($right));
+        if (empty($right))
+            throw new Exception("Nothing after your power for $left");
+        if ($left !== "i")
+            return (floatval($left) ** floatval($right));
+        switch ($right % 4)
+        {
+            case (0) :
+                return ("1");
+            case (1) :
+                return ("i");
+            case (2) :
+                return ("-1");
+            case (3) :
+                return ("-1*i");
+        }
     }
 
     static function minus($left, $right)
     {
-        if (isset($right))
-            return (floatval($left) - floatval($right));
-        return (floatval($left));
+        if (empty($right))
+            throw new Exception("Nothing after your minus for $left");
+        return (floatval($left) - floatval($right));
     }
     
     static function div($left, $right)
     {
-        if (isset($right))
-            return (floatval($left) / floatval($right));
-        return ($left);
+        if (empty($right))
+            throw new Exception("Nothing after your division for $left");
+        if (floatval($right) === 0.0)
+            throw new Exception("Can't divise by 0");
+        return (floatval($left) / floatval($right));
     }
     
+    static function getImaginaryPower($left, $right)
+    {
+        $pow = 0;
+        if (strstr($left, "i") !== false)
+            $pow++;
+        if (strstr($right, "i") !== false)
+            $pow++;
+        return ($pow);
+    }
+
     static function mult($left, $right)
     {
-        if (isset($right))
-            return (floatval($left) * floatval($right));
-        return (floatval($left));
+        if (empty($right))
+            throw new Exception("Nothing after your multiplication for $left");
+        if ($left !== "i" && $right !== "i")
+        {
+            $iPow = OpSolve::getImaginaryPower($left, $right);
+            $result = floatval($left) * floatval($right);
+            if ($iPow === 1)
+                return ($result."i");
+            else if ($iPow === 2)
+                return ($result."*-1");
+            else if ($iPow === 3)
+                return ($result."*-1*i");
+            return ($result);
+        }
+        if ($left === "i")
+            return ($right.$left);
+        return ($left.$right);
     }
     
     static function modulo($left, $right)
     {
-        if (isset($right))
-            return (floatval($left) % floatval($right));
-        return (floatval($left));
+        if (empty($right))
+            throw new Exception("Nothing after your modulo for $left");
+        return (floatval($left) % floatval($right));
     }
 
     static function priorOp($op)
@@ -99,7 +139,7 @@ class OpSolve{
     static function getLastNb($op, $pos)
     {
         $pos--;
-        for (; $pos !== 0 && (is_numeric($op[$pos]) || $op[$pos] === "."); $pos--);
+        for (; $pos !== 0 && (is_numeric($op[$pos]) || $op[$pos] === "." || $op[$pos] === "i"); $pos--);
         return ($pos ? $pos + 1 : 0);
     }
 
@@ -109,7 +149,7 @@ class OpSolve{
         $len = strlen($op);
         if ($op[$pos] === "-")
             $pos++;
-        for (; $pos < $len && (is_numeric($op[$pos]) || $op[$pos] === "."); $pos++);
+        for (; $pos < $len && (is_numeric($op[$pos]) || $op[$pos] === "." || $op[$pos] === "i"); $pos++);
         return ($pos ? $pos - 1 : 0);
     }
 

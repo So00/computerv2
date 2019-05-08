@@ -150,7 +150,7 @@ class OpValidator
 
     static function isValidNumber($str)
     {
-        if (preg_match("/^([+-]?[0-9]+(\.[0-9]+)?)$/", $str))
+        if (preg_match("/^([+-]?[0-9]+(\.[0-9]+)?)$/", $str) || $str === "i")
             return (1);
         return (0);
     }

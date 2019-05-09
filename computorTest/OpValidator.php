@@ -20,7 +20,7 @@ class OpValidator
                 for ($j = 0; $j < $nameLen && $str[$i + $j] === $name[$j]; $j++);
                 if ($j === $nameLen && (!isset($str[$i + $j]) || !OpValidator::isalpha($str[$i + $j])))
                 {
-                    $str = substr_replace($str, $value, $i, $j);
+                    $str = substr_replace($str, "($value)", $i, $j);
                     $i = -1;
                 }
             }
@@ -58,7 +58,10 @@ class OpValidator
             if ($op[$j] === "(")
                 $brackets++;
             if ($brackets < 0)
+            {
+                echo "$op\n";
                 throw new Exception("Brackets are close before being open");
+            }
         }
         if ($brackets)
             throw new Exception("Some backets are never closed");
@@ -192,6 +195,7 @@ class OpValidator
         $save = $op;
         $op = str_replace(["(", ")"], "", $op);
         $op = str_replace("*-", "*", $op);
+        $op = str_replace("/-", "/", $op);
         for ($i = 0; $i < strlen($op); $i++)
         {
             $nextOp = OpValidator::strgetpos($op, $i);

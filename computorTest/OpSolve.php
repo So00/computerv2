@@ -118,15 +118,15 @@ class OpSolve{
     static function priorOp($op, $lastPossible)
     {
         $begin = ($lastPossible === NULL ? 0 : $lastPossible);
-        $firstOp = strpos($op, "(", $begin);
+        $firstOp = strpos($op, "^", $begin);
+        if ($firstOp === false)
+            $firstOp = strpos($op, "(", $begin);
         if ($firstOp === false && preg_match("/[\*\/\%\^]/i", $op) !== 0)
         {
             $firstOp = strpos($op, "/", $begin);
             if ((($tmp = strpos($op, "%", $begin)) && $tmp < $firstOp) || $firstOp === false)
                 $firstOp = $tmp;
             if ((($tmp = strpos($op, "*", $begin)) && $tmp < $firstOp) || $firstOp === false)
-                $firstOp = $tmp;
-            if ((($tmp = strpos($op, "^", $begin))) || $firstOp === false)
                 $firstOp = $tmp;
         }
         return ($firstOp);
@@ -226,58 +226,57 @@ class OpSolve{
         while ($op[$pos - 1] === "*")
         {
             $lastNum = OpSolve::getLastNb($op, $pos - 1);
+            if ($op[$lastNum - 1] === "-")
+                $lastNum--;
             $multOp = substr($op, $lastNum, $end - $lastNum);
             $replacement = OpSolve::multBrackets($multOp);
             $op = str_replace($multOp, $replacement, $op);
+            OpSolve::replaceSign($op);
             $pos = strpos($op, "(");
             $end = OpSolve::getBracketsEnd($op, $pos);
-            OpSolve::replaceSign($op);
         }
-        echo $op."\n";
         // die();
         // while ($op[$pos - 1] === "*")
         // {
         //     $lastNum = OpSolve::getLastNb($op, $pos - 1);
         //     $num = substr($op, $lastNum, $pos - 1 - $lastNum);
         //     $depth = 1;
-            // for ($i = $pos + 1; $i < $end; $i++)
-            // {
+        // for ($i = $pos + 1; $i < $end; $i++)
+        // {
             //     if ($op[$i] === "(")
             //         $depth++;
             //     if ($op[$i] === "(")
             //         $depth--;
             //     if ($i === $pos + 1)
             //     {
-            //         $op = substr_replace($op, "$num*", $i, 0);
-            //         $end = OpSolve::getBracketsEnd($op, $pos);
-            //     }
-            //     if (($op[$i] === "+" || $op[$i] === "-")
-            //     && (is_numeric($op[$i - 1]) || $op[$i - 1] === "i") && $depth === 1)
-            //     $op = substr_replace($op, "$num*", $i + 1, 0);
-            // }
-            // $op = substr_replace($op, "", $pos - strlen($num) - 1, strlen($num) + 1);
-            // $pos += strlen("$num*");
-            // $end = OpSolve::getBracketsEnd($op, $pos);
+        //         $op = substr_replace($op, "$num*", $i, 0);
+        //         $end = OpSolve::getBracketsEnd($op, $pos);
+        //     }
+        //     if (($op[$i] === "+" || $op[$i] === "-")
+        //     && (is_numeric($op[$i - 1]) || $op[$i - 1] === "i") && $depth === 1)
+        //     $op = substr_replace($op, "$num*", $i + 1, 0);
+        // }
+        // $op = substr_replace($op, "", $pos - strlen($num) - 1, strlen($num) + 1);
+        // $pos += strlen("$num*");
+        // $end = OpSolve::getBracketsEnd($op, $pos);
         // }
         // OpSolve::replaceSign($op);
         // while ($op[$end] === "/")
         // {
-        //     $nextNum = OpSolve::getNextnb($op, $end);
-        //     for ($i = $pos + 1; $i < $end + 2; $i++)
-        //     {
-        //         if ((($op[$i] === "+" || $op[$i] === "-")
-        //         && (is_numeric($op[$i - 1]) || $op[$i - 1] === "i")) || $op[$i] === ")")
-        //         {    $op = substr_replace($op, "/$num", $i, 0);
-        //             $i += strlen("/$num");
-        //         }
-        //     }
-        //     $end = OpSolve::getBracketsEnd($op, $pos);
-        //     $op = substr_replace($op, "", $end, strlen("$num") + 1);
-        // }
-        // OpSolve::replaceSign($op);
-        echo "OP : ".$op."\n";
+            //     $nextNum = OpSolve::getNextnb($op, $end);
+            //     for ($i = $pos + 1; $i < $end + 2; $i++)
+            //     {
+                //         if ((($op[$i] === "+" || $op[$i] === "-")
+                //         && (is_numeric($op[$i - 1]) || $op[$i - 1] === "i")) || $op[$i] === ")")
+                //         {    $op = substr_replace($op, "/$num", $i, 0);
+                    //             $i += strlen("/$num");
+                    //         }
+                    //     }
+                    //     $end = OpSolve::getBracketsEnd($op, $pos);
+                    //     $op = substr_replace($op, "", $end, strlen("$num") + 1);
+                    // }
+                    // OpSolve::replaceSign($op);
         $solve = OpSolve::solve(substr($op, $pos + 1, ($end - 1) - ($pos + 1)), $data);
-        echo "SOLVE : $solve\n";
         $op = str_replace(substr($op, $pos, $end - $pos), $solve, $op);
     }
 
@@ -393,6 +392,7 @@ class OpSolve{
 
     static function solve ($op, $data)
     {
+        // echo "DEBUT $op\n";
         $op = OpValidator::replaceSpace($op, $data);
         $op = OpValidator::replaceAllFun($op, $data);
         $op = preg_replace("/\s/", "", $op);
@@ -413,6 +413,7 @@ class OpSolve{
                 OpSolve::replaceSimpleOp($op, $prior, $lastNum, $nextNum, $lastPossible);
             }
         }
+        // echo "Medium $op\n";
         $lastPossible = NULL;
         $op = OpSolve::splitBasic($op);
         return ($op);

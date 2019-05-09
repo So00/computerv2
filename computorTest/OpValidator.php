@@ -43,8 +43,8 @@ class OpValidator
             {
                 $str = OpValidator::replaceVar($str, $name, $value);
             }
-        while (preg_match("/(\(.*\))\s*\*?(-?[0-9]+)/", $str))
-            $str = preg_replace("/(\(.*\))\s*\*?(-?[0-9]+)/", "$2*$1", $str);
+        while (preg_match("/(\(.*\))\s*((\*?\s*[0-9]+)|(\*\s*(-?[0-9]+)))/", $str))
+            $str = preg_replace("/(\(.*\))\s*((\*?\s*[0-9]+)|(\*\s*(-?[0-9]+))/", "$2*$1", $str);
         $str = preg_replace("/(-)\s?(\(.*\))/", "-1*$2", $str);
         return ($str);
     }

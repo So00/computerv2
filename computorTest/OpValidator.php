@@ -28,6 +28,7 @@ class OpValidator
         return ($str);
     }
 
+    /** Resoudre le pb de (3+3)-3  CA NE MULTIPLIE PAS */
     static function replaceSpace($str, $data)
     {
         $str = preg_replace("/([a-z]+)\s+([a-z]+)/", "$1*$2", $str);

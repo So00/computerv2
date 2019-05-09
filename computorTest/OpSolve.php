@@ -218,7 +218,28 @@ class OpSolve{
         return ($replacement);
     }
 
-    // (4i+5+8)(20+i^4)-3=?  ERROR HERE
+    static function divBrackets($op, $division)
+    {
+        $replacement = "(";
+        $depth = 0;
+        $len = strlen($op);
+        for ($i = 0; $i < $len; $i++)
+        {
+            if ((($op[$i] === "+" || $op[$i] === "-") && (is_numeric($op[$i - 1]) || $op[$i - 1] === "i") && !$depth)
+            || $i === $len
+            || ($op[$i - 1] === ")" && !$depth) && $i > 0)
+                $replacement .= "$division";
+            if ($op[$i] === "(")
+                $depth++;
+            if ($op[$i] === ")")
+                $depth--;
+            $replacement .= $op[$i];
+        }
+        return ($replacement);
+    }
+
+    //(4i+5+8)(20+i^4)/i=?
+    //   == 84 - 273 i
     // TOUT REFAIRE JE PENSE
     static function replaceBrackets(&$op, $pos, $data)
     {
@@ -235,47 +256,16 @@ class OpSolve{
             $pos = strpos($op, "(");
             $end = OpSolve::getBracketsEnd($op, $pos);
         }
-        // die();
-        // while ($op[$pos - 1] === "*")
-        // {
-        //     $lastNum = OpSolve::getLastNb($op, $pos - 1);
-        //     $num = substr($op, $lastNum, $pos - 1 - $lastNum);
-        //     $depth = 1;
-        // for ($i = $pos + 1; $i < $end; $i++)
-        // {
-            //     if ($op[$i] === "(")
-            //         $depth++;
-            //     if ($op[$i] === "(")
-            //         $depth--;
-            //     if ($i === $pos + 1)
-            //     {
-        //         $op = substr_replace($op, "$num*", $i, 0);
-        //         $end = OpSolve::getBracketsEnd($op, $pos);
-        //     }
-        //     if (($op[$i] === "+" || $op[$i] === "-")
-        //     && (is_numeric($op[$i - 1]) || $op[$i - 1] === "i") && $depth === 1)
-        //     $op = substr_replace($op, "$num*", $i + 1, 0);
-        // }
-        // $op = substr_replace($op, "", $pos - strlen($num) - 1, strlen($num) + 1);
-        // $pos += strlen("$num*");
-        // $end = OpSolve::getBracketsEnd($op, $pos);
-        // }
-        // OpSolve::replaceSign($op);
-        // while ($op[$end] === "/")
-        // {
-            //     $nextNum = OpSolve::getNextnb($op, $end);
-            //     for ($i = $pos + 1; $i < $end + 2; $i++)
-            //     {
-                //         if ((($op[$i] === "+" || $op[$i] === "-")
-                //         && (is_numeric($op[$i - 1]) || $op[$i - 1] === "i")) || $op[$i] === ")")
-                //         {    $op = substr_replace($op, "/$num", $i, 0);
-                    //             $i += strlen("/$num");
-                    //         }
-                    //     }
-                    //     $end = OpSolve::getBracketsEnd($op, $pos);
-                    //     $op = substr_replace($op, "", $end, strlen("$num") + 1);
-                    // }
-                    // OpSolve::replaceSign($op);
+        while ($op[$end] === "/")
+        {
+            $nextNum = OpSolve::getNextnb($op, $end);
+            $num = substr($op, $end, $nextNum - $end + 1);
+            $replacement = OpSolve::divBrackets(substr($op, $pos + 1, $end - ($pos + 1)), $num);
+            $op = str_replace(substr($op, $pos,  $nextNum - $pos + 1), $replacement, $op);
+            OpSolve::replaceSign($op);
+            $pos = strpos($op, "(");
+            $end = OpSolve::getBracketsEnd($op, $pos);
+        }
         $solve = OpSolve::solve(substr($op, $pos + 1, ($end - 1) - ($pos + 1)), $data);
         $op = str_replace(substr($op, $pos, $end - $pos), $solve, $op);
     }

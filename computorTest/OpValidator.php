@@ -28,6 +28,11 @@ class OpValidator
         return ($str);
     }
 
+    static function replaceMinus($first, $second)
+    {
+
+    }
+
     /** Resoudre le pb de (3+3)-3  CA NE MULTIPLIE PAS */
     static function replaceSpace($str, $data)
     {
@@ -44,7 +49,14 @@ class OpValidator
                 $str = OpValidator::replaceVar($str, $name, $value);
             }
         while (preg_match("/(\(.*\))\s*((\*?\s*[0-9]+)|(\*\s*(-?[0-9]+)))/", $str))
-            $str = preg_replace("/(\(.*\))\s*((\*?\s*[0-9]+)|(\*\s*(-?[0-9]+))/", "$2*$1", $str);
+        {
+            $str = preg_replace_callback("/(\(.*\))\s*(\*?\s*[0-9]+|\*\s*-?[0-9]+)/",   function ($matches)
+                                                                                            {
+                                                                                                if ($matches[2][0] === "*")
+                                                                                                    $matches[2] = substr($matches[2], 1);
+                                                                                                return ($matches[2]."*".$matches[1]);
+                                                                                            }, $str);
+        }
         $str = preg_replace("/(-)\s?(\(.*\))/", "-1*$2", $str);
         return ($str);
     }

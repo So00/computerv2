@@ -275,7 +275,9 @@ class OpSolve{
         //     $op = substr_replace($op, "", $end, strlen("$num") + 1);
         // }
         // OpSolve::replaceSign($op);
+        echo "OP : ".$op."\n";
         $solve = OpSolve::solve(substr($op, $pos + 1, ($end - 1) - ($pos + 1)), $data);
+        echo "SOLVE : $solve\n";
         $op = str_replace(substr($op, $pos, $end - $pos), $solve, $op);
     }
 

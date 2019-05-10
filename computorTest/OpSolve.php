@@ -382,7 +382,6 @@ class OpSolve{
 
     static function solve ($op, $data)
     {
-        // echo "DEBUT $op\n";
         $op = OpValidator::replaceSpace($op, $data);
         $op = OpValidator::replaceAllFun($op, $data);
         $op = preg_replace("/\s/", "", $op);
@@ -403,7 +402,6 @@ class OpSolve{
                 OpSolve::replaceSimpleOp($op, $prior, $lastNum, $nextNum, $lastPossible);
             }
         }
-        // echo "Medium $op\n";
         $lastPossible = NULL;
         $op = OpSolve::splitBasic($op);
         return ($op);

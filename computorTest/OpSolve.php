@@ -2,23 +2,20 @@
 
 include_once "OpValidator.php";
 include_once "Data.php";
+include_once "MatriceSolve.php";
 
 class OpSolve{
 
     static public $operator = ["+", "-", "%", "/", "*", "(", ")"];
-    static public $operation = ["+" => "add", "%" => "modulo", "-" => "minus", "/" => "div", "*" => "mult", "^" => "power"];
-
-    static function add($left, $right)
-    {
-        if ($right == false)
-            throw new Exception("Nothing after your minus for $left");
-        return (floatval($left) + floatval($right));
-    }
+    static public $operation = ["%" => "modulo", "/" => "div", "*" => "mult", "^" => "power"];
     
+    /** Change the power by their result for imaginay and real */
     static function power($left, $right)
     {
         if ($right === false)
             throw new Exception("Nothing after your power for $left");
+        if (strpos($right, "i") !== false)
+            throw new Exception("i as power? real?");
         if ($left !== "i")
             return (floatval($left) ** floatval($right));
         switch ($right % 4)
@@ -34,13 +31,7 @@ class OpSolve{
         }
     }
 
-    static function minus($left, $right)
-    {
-        if ($right == false)
-            throw new Exception("Nothing after your minus for $left");
-        return (floatval($left) - floatval($right));
-    }
-    
+    /** Replace i if it is alone  */
     static function replaceSimpleI(&$left, &$right)
     {
         $positiv = ["i", "+i"];
@@ -54,6 +45,7 @@ class OpSolve{
             $right = "-1";
     }
 
+    /** Check the power of a imaginary number and return it */
     static function getImaginaryPower($left, $right, $op)
     {
         $pow = 0;
@@ -71,7 +63,7 @@ class OpSolve{
 
     static function div($left, $right)
     {
-        if ($right == false)
+        if ($right === false)
             throw new Exception("Nothing after your division for $left");
         $iPow = OpSolve::getImaginaryPower($left, $right, "div");
         OpSolve::replaceSimpleI($left, $right);
@@ -87,7 +79,7 @@ class OpSolve{
 
     static function mult($left, $right)
     {
-        if ($right == false)
+        if ($right === false)
             throw new Exception("Nothing after your multiplication for $left");
         $iPow = OpSolve::getImaginaryPower($left, $right, "mult");
         OpSolve::replaceSimpleI($left, $right);
@@ -98,10 +90,10 @@ class OpSolve{
             return ($result * -1);
         return ($result);
     }
-    
+
     static function modulo($left, $right)
     {
-        if ($right == false)
+        if ($right === false)
             throw new Exception("Nothing after your modulo for $left");
         $iPow = OpSolve::getImaginaryPower($left, $right, "div");
         OpSolve::replaceSimpleI($left, $right);
@@ -115,6 +107,10 @@ class OpSolve{
         return ($result);
     }
 
+    /** Get the prior operation first
+     *  $lastpossible is the last possible prior op
+     *  ex : can't do 1/i >> we go to next
+     * */
     static function priorOp($op, $lastPossible)
     {
         $begin = ($lastPossible === NULL ? 0 : $lastPossible);
@@ -163,6 +159,7 @@ class OpSolve{
             $lastPossible = $lastPos + strlen($replacement);
     }
 
+    /** Get the number that preceed the position */
     static function getLastNb($op, $pos)
     {
         $pos--;
@@ -170,6 +167,7 @@ class OpSolve{
         return ($pos ? $pos + 1 : 0);
     }
 
+    /** Get the next number until it's valid from a position */
     static function getNextnb($op, $pos)
     {
         $pos++;
@@ -180,6 +178,7 @@ class OpSolve{
         return ($pos ? $pos - 1 : 0);
     }
 
+    /** Get the end of a brackets */
     static function getBracketsEnd($op, $begin)
     {
         $brackets = 1;
@@ -196,6 +195,7 @@ class OpSolve{
         return ($end);
     }
 
+    /** Place the mult from outside in the brackets */
     static function multBrackets($multOp)
     {
         $number = substr($multOp, 0, strpos($multOp, "("));
@@ -212,12 +212,13 @@ class OpSolve{
                 $depth--;
             $replacement .= $multOp[$i];
             if (($multOp[$i] === "+" || $multOp[$i] === "-")
-                && (is_numeric($multOp[$i - 1]) || $multOp[$i - 1] === "i" || $multOp[$i - 1]) && $depth === 0)
+                && (is_numeric($multOp[$i - 1]) || $multOp[$i - 1] === "i" || $multOp[$i - 1]) && $depth === 0 && $i !== $brPos + 1)
                 $replacement .= $number;
         }
         return ($replacement);
     }
 
+    /** Place the division from outside in the brackets */
     static function divBrackets($op, $division)
     {
         $replacement = "(";
@@ -238,9 +239,7 @@ class OpSolve{
         return ($replacement);
     }
 
-    //(4i+5+8)(20+i^4)/i=?
-    //   == 84 - 273 i
-    // TOUT REFAIRE JE PENSE
+    /** Calculate and replace the brackets by the result */
     static function replaceBrackets(&$op, $pos, $data)
     {
         $end = OpSolve::getBracketsEnd($op, $pos);
@@ -270,12 +269,7 @@ class OpSolve{
         $op = str_replace(substr($op, $pos, $end - $pos), $solve, $op);
     }
 
-    static function matriceSolve($op, $data)
-    {
-        $matrice = OpValidator::isMatrice($op, $data);
-        return ($matrice);
-    }
-
+    /** Split and calculate the basic op by order (i^0, i^1, /i) */
     static function splitBasic($op)
     {
         $basicOp = ["+", "-"];
@@ -286,7 +280,7 @@ class OpSolve{
         ];
         for ($i = 0; $i < strlen($op); $i++)
         {
-            $num = OpSolve::getNextnb($op, $i);
+            $num = OpSolve::getNextnb($op, ($i ? $i : $i - 1));
             if ($op[$num + 1] === "/")
                 $num = OpSolve::getNextnb($op, $num + 1);
             $number = substr($op, $i, $num + 1 - $i);
@@ -294,8 +288,10 @@ class OpSolve{
                 $result["iDiv"] += floatval($number);
             else if (strstr($number, "i"))
             {
-                if ($number === "i")
+                if ($number === "i" || $number === "+i")
                     $number = "1";
+                if ($number === "-i")
+                    $number = "-1";
                 $result["iPow"] += floatval($number);
             }
             else
@@ -310,6 +306,7 @@ class OpSolve{
         return ($return);
     }
 
+    /** Replace double sign like ++ -+ +- -- */
     static function replaceSign(&$op)
     {
         $replace = 1;
@@ -328,6 +325,7 @@ class OpSolve{
         }
     }
 
+    /** Expand the brackets when they are multiplied from outside or multiplied each other */
     static function expandBracketsPow($op)
     {
         if (preg_match_all("/(\(.*\))\^([0-9]+)/U", $op, $allPow))
@@ -388,7 +386,7 @@ class OpSolve{
         if (!OpValidator::checkRightOperand($op, $data))
             throw new Exception("$op is not a valid operation");
         if (strpos($op, "[") !== false)
-            return (OpSolve::matriceSolve($op, $data));
+            return (MatriceSolve::matriceSolve($op, $data));
         $lastPossible = NULL;
         $op = OpSolve::expandBracketsPow($op);
         while (($prior = OpSolve::priorOp($op, $lastPossible)) !== false)

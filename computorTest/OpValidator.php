@@ -123,7 +123,7 @@ class OpValidator
                     throw new Exception("Your matrice lines do not have the same size");
                 foreach ($arrayOfValue as $actLignValue)
                 {
-                    if (empty($actLignValue))
+                    if (!isset($actLignValue) || $actLignValue == "")
                         throw new Exception("A variable in your matrice is not set");
                     if (!OpValidator::checkSemanticOp($actLignValue, $data))
                         return (0);
@@ -211,6 +211,8 @@ class OpValidator
         $op = str_replace("/-", "/", $op);
         for ($i = 0; $i < strlen($op); $i++)
         {
+            if ($op[$i] === "*" && $op[$i - 2] === "]" && $op[$i - 1] === "*" && $op[$i + 1] === "[")
+                $i++;
             $nextOp = OpValidator::strgetpos($op, $i);
             $search = substr($op, $i, $nextOp - $i);
             if (!OpValidator::isValidNumber($search) && !OpValidator::isMatrice($search, $data) && !OpValidator::isFun($search, $op, $i, $nextOp, $data))

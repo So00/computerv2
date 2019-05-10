@@ -40,7 +40,14 @@ class Controler
                 if ($this->array[1][strlen($this->array[1]) - 1] !== "?")
                     throw new Exception("Please put the \"?\" at the end");
                 if ($this->array[1] === "?")
-                    echo OpSolve::solve($this->array[0], $this->data) . "\n";
+                {
+                    $result = OpSolve::solve($this->array[0], $this->data);
+                    if (is_array($result))
+                        foreach ($result as $actRes)
+                            echo "[".join(",", $actRes)."]\n";
+                    else
+                        echo $result."\n";
+                }
                 else
                     echo "other stuff\n";
                 // $this->array[1] = substr($this->array[1], 0, strlen($this->array[1]) - 1);

@@ -16,6 +16,7 @@ class MatriceSolve
     }
 
     /** [[1,2];[1,2];[1,2];[1,2]]**[[2,4,5];[2,3,4]]=? */
+    /** [[1,0];[2,-1]]**[[3,4];[-2,3]]=? */
     static function multMatr($matrice, $secondMatrice, $data)
     {
         if (count($matrice[0]) === count($secondMatrice))

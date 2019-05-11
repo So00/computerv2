@@ -14,6 +14,8 @@ class OpSolve{
     {
         if ($right === false)
             throw new Exception("Nothing after your power for $left");
+        if (intval($right) != floatval($right))
+            throw new Exception("Can't handle float power");
         if (strpos($right, "i") !== false)
             throw new Exception("i as power? real?");
         if ($left !== "i")

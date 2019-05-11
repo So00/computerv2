@@ -141,9 +141,18 @@ class Data
         }
     }
 
+    /** Need to pass matrice in first pos for the key so that they are replace in firsts positions */
     function varSave($leftOp, $rightOp)
     {
         $this->var[$leftOp] = OpSolve::solve($rightOp, $this);
+        if (is_array($this->var[$leftOp]))
+        {
+            $tmp[$leftOp] = $this->var[$leftOp];
+            foreach ($this->var as $key => $rightOp)
+                $tmp[$key] = $rightOp;
+            unset($this->var);
+            $this->var = $tmp;
+        }
         $this->showVar($leftOp, $this->var[$leftOp]);
     }
 }

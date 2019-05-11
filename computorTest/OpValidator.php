@@ -20,17 +20,15 @@ class OpValidator
                 for ($j = 0; $j < $nameLen && $str[$i + $j] === $name[$j]; $j++);
                 if ($j === $nameLen && (!isset($str[$i + $j]) || !OpValidator::isalpha($str[$i + $j])))
                 {
-                    $str = substr_replace($str, "($value)", $i, $j);
+                    if (strstr($value, "[") === false && strstr($str, "[") === false)
+                        $str = substr_replace($str, "($value)", $i, $j);
+                    else
+                        $str = substr_replace($str, "$value", $i, $j);
                     $i = -1;
                 }
             }
         }
         return ($str);
-    }
-
-    static function replaceMinus($first, $second)
-    {
-
     }
 
     /** Resoudre le pb de (3+3)-3  CA NE MULTIPLIE PAS */
@@ -46,6 +44,14 @@ class OpValidator
         if (count($data->var))
             foreach ($data->var as $name => $value)
             {
+                if (is_array($value))
+                {
+                    $matrice = "[";
+                    foreach ($value as $key => $act)
+                        $matrice .= "[" . join(",", $act) . "]" . (isset($value[$key + 1]) ? ";" : "");
+                    $matrice .= "]";
+                    $value = $matrice;
+                }
                 $str = OpValidator::replaceVar($str, $name, $value);
             }
         while (preg_match("/(\(.*\))\s*((\*?\s*[0-9]+)|(\*\s*(-?[0-9]+)))/", $str))
@@ -209,6 +215,8 @@ class OpValidator
         $op = str_replace(["(", ")"], "", $op);
         $op = str_replace("*-", "*", $op);
         $op = str_replace("/-", "/", $op);
+        $op = str_replace(["+-","-+"], "-", $op);
+        $op = str_replace("--", "+", $op);
         for ($i = 0; $i < strlen($op); $i++)
         {
             if ($op[$i] === "*" && $op[$i - 2] === "]" && $op[$i - 1] === "*" && $op[$i + 1] === "[")

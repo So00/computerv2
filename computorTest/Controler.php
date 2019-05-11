@@ -50,12 +50,6 @@ class Controler
                 }
                 else
                     echo "other stuff\n";
-                // $this->array[1] = substr($this->array[1], 0, strlen($this->array[1]) - 1);
-                // //variable as param in fun to solve
-                // if ($this->fun->validSolveFun($this->array, $this->var))
-                //     $this->fun->solve();
-                // else if (($arr = $this->poly->validPol($this->array)))
-                //     $this->poly->solve($arr);
             }
         }
 

@@ -298,7 +298,7 @@ class OpSolve{
                 $result["noPow"] += floatval($number);
             $i = $num;
         }
-        $return = ($result["noPow"] ? $result["noPow"] : "");
+        $return = ($result["noPow"] || (!$result["iPow"] && !$result["iDiv"])? $result["noPow"] : "");
         if ($result["iPow"])
             $return .= ($return !== "" && $result["iPow"] > 0 ? "+" : "") . $result["iPow"]."i";
         if ($result["iDiv"])
@@ -328,11 +328,13 @@ class OpSolve{
     /** Expand the brackets when they are multiplied from outside or multiplied each other */
     static function expandBracketsPow($op)
     {
-        if (preg_match_all("/(\(.*\))\^([0-9]+)/U", $op, $allPow))
+        if (preg_match_all("/(\(.*\))\^([0-9]+\.?([0-9]+))/U", $op, $allPow))
         {
             foreach ($allPow[1] as $key => $actOp)
             {
                 $replacement = "";
+                if (strstr($allPow[2][$key], "."))
+                    throw new Exception("Can't handle float power on brackets, sorry :)");
                 for ($i = intval($allPow[2][$key]); $i; $i--)
                     $replacement .= $actOp . ($i !== 1 ? "*" : "");
                 $op = str_replace($allPow[0][$key], $replacement, $op);

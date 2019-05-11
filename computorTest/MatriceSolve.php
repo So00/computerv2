@@ -11,7 +11,6 @@ class MatriceSolve
         $op = "";
         for ($i = 0; $i < $size; $i++)
             $op .= "({$matrice[$line][$i]})*({$secondMatrice[$i][$col]})" . ($i < $size - 1 ? "+" : "");
-        echo "$op\n";
         return (OpSolve::solve($op, $data));
     }
 
@@ -29,12 +28,12 @@ class MatriceSolve
             {
                 for ($j = 0; $j < $line; $j++)
                 {
-                    $newMatrice[$j][$i] = matriceSolve::calc($matrice, $secondMatrice, $j, $i, $size, $data);
+                    $newMatrice[$i][$j] = matriceSolve::calc($matrice, $secondMatrice, $j, $i, $size, $data);
                 }
             }
             return ($newMatrice);
         }
-        throw new Exception("First matrice has ". count($matrice). " lines and second matrice has " . count($secondMatrice[0]) . " columns");
+        throw new Exception("First matrice has ". count($matrice[0]). " lines and second matrice has " . count($secondMatrice) . " columns");
     }
 
     static function multClassic($mult, $matrice, $data)
@@ -107,8 +106,7 @@ class MatriceSolve
                 $beginSecondMatrice = $endMatrice + 3;
                 $secondMatrice = OpValidator::isMatrice(substr($op, $beginSecondMatrice, $endSecondMatrice - $beginSecondMatrice), $data);
                 $matrice = matriceSolve::multMatr($matrice, $secondMatrice, $data);
-                var_dump($matrice);
-                die();
+                $op = substr_replace($op, "", $endMatrice + 1, $endSecondMatrice - $endMatrice - 1);
             }
         }
         return ($matrice);

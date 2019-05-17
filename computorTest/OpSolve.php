@@ -286,9 +286,9 @@ class OpSolve{
             if ($op[$num + 1] === "/")
                 $num = OpSolve::getNextnb($op, $num + 1);
             $number = substr($op, $i, $num + 1 - $i);
-            if (strstr($number, "/i"))
+            if (strstr($number, "/i") && is_numeric(str_replace("/i", "", $number)))
                 $result["iDiv"] += floatval($number);
-            else if (strstr($number, "i"))
+            else if (strstr($number, "i") && ($number === "i" || $number === "+i" || $number === "-i" || is_numeric(str_replace("i", "", $number))))
             {
                 if ($number === "i" || $number === "+i")
                     $number = "1";
@@ -296,8 +296,10 @@ class OpSolve{
                     $number = "-1";
                 $result["iPow"] += floatval($number);
             }
-            else
+            else if (is_numeric($number))
                 $result["noPow"] += floatval($number);
+            else
+                throw new Exception("Error here : $number");
             $i = $num;
         }
         $return = ($result["noPow"] || (!$result["iPow"] && !$result["iDiv"])? $result["noPow"] : "");

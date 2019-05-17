@@ -3,16 +3,19 @@ include_once "Data.php";
 include_once "NameValidator.php";
 include_once "OpValidator.php";
 include_once "OpSolve.php";
+include_once "Polynom.php";
 
 class Controler
 {
         public $str;
         public $array;
         public $data;
+        public $polynom;
 
-        function __construct($data)
+        function __construct($data, $polynom)
         {
             $this->data = $data;
+            $this->polynom = $polynom;
         }
 
         function parse()
@@ -49,7 +52,9 @@ class Controler
                         echo $result."\n";
                 }
                 else
-                    echo "other stuff\n";
+                {
+                    $this->polynom->solve($this->array[0], substr($this->array[1], 0, strlen($this->array[1]) - 1), $this->data);
+                }
             }
         }
 

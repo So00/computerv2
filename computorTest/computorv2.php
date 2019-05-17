@@ -3,7 +3,8 @@
 
     $continue = 1;
     $data = new Data();
-    $controler = new Controler($data);
+    $polynom = new Polynom();
+    $controler = new Controler($data, $polynom);
 
     while ($continue)
     {
